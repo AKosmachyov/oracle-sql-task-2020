@@ -20,26 +20,23 @@ WHERE EXTRACT(YEAR FROM TO_DATE(birth_date, 'DD/MM/YYYY')) < 1955 AND phone LIKE
 
 -- 7
 
-SELECT room_id, COUNT(Visits.id) AS "Количество больных в палате" FROM Visits
+SELECT room_number, COUNT(Visits.id) AS "Количество больных в палате" FROM Visits
 INNER JOIN Hospital_Beds
     ON Visits.bed_id = Hospital_Beds.id
 INNER JOIN Hospital_Rooms
     ON Hospital_Rooms.id = Hospital_Beds.room_id
-GROUP BY room_id
+GROUP BY room_number
 ORDER BY "Количество больных в палате" DESC;
 
 -- 8
 
-Палаты больных с заданной температурой
-
-SELECT room_id FROM Visits WHERE 
+SELECT Hospital_Rooms.room_number FROM Visits
 INNER JOIN Hospital_Beds
     ON Visits.bed_id = Hospital_Beds.id
 INNER JOIN Hospital_Rooms
     ON Hospital_Rooms.id = Hospital_Beds.room_id
-GROUP BY room_id
-ORDER BY "Количество больных в палате" DESC;
-
+WHERE temperature = 37.9
+GROUP BY Hospital_Rooms.room_number;
 
 -- 9
 
