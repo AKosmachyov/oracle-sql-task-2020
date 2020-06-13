@@ -8,10 +8,10 @@ ALTER TABLE Doctors ADD CHECK (phone LIKE '375%');
 INSERT INTO Doctors (id,name,phone,email,title) VALUES (200,'Malachi Carter','2540436133','malesuada.ut.sem@suscipitest.net','диетолог');
 
 -- 5
-SELECT name, email FROM Patients WHERE id=28;
-UPDATE Patients SET email='ivan_line@yandex.com' WHERE id=28;
+SELECT name, email FROM Patients WHERE id=32;
+UPDATE Patients SET email='ivan_line@yandex.com' WHERE id=32;
 
-DELETE FROM Patients WHERE id=28;
+DELETE FROM Patients WHERE id=32;
 
 -- 6
 
@@ -19,17 +19,26 @@ SELECT name, phone, birth_date FROM Patients
 WHERE EXTRACT(YEAR FROM TO_DATE(birth_date, 'DD/MM/YYYY')) < 1955 AND phone LIKE '37544%';
 
 -- 7
-/// 
 
-SELECT COUNT(patient_id) AS "Количество больных в каждой палате", temperature FROM Visits
+SELECT room_id, COUNT(Visits.id) AS "Количество больных в палате" FROM Visits
 INNER JOIN Hospital_Beds
     ON Visits.bed_id = Hospital_Beds.id
-GROUP BY room_id ORDER BY "Количество больных в каждой палате" DESC;
+INNER JOIN Hospital_Rooms
+    ON Hospital_Rooms.id = Hospital_Beds.room_id
+GROUP BY room_id
+ORDER BY "Количество больных в палате" DESC;
 
 -- 8
 
 Палаты больных с заданной температурой
 
+SELECT room_id FROM Visits WHERE 
+INNER JOIN Hospital_Beds
+    ON Visits.bed_id = Hospital_Beds.id
+INNER JOIN Hospital_Rooms
+    ON Hospital_Rooms.id = Hospital_Beds.room_id
+GROUP BY room_id
+ORDER BY "Количество больных в палате" DESC;
 
 
 -- 9
