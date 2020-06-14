@@ -4,7 +4,7 @@ CREATE TABLE Visits (
   doctor_id NUMBER NOT NULL,
   temperature NUMBER NOT NULL,
   bed_id NUMBER NOT NULL,
-  discharge_date VARCHAR2(19) NOT NULL,
+  discharge_date VARCHAR2(19),
   visit_date VARCHAR2(19) NOT NULL,
   FOREIGN KEY (patient_id) REFERENCES Patients(id),
   FOREIGN KEY (doctor_id) REFERENCES Doctors(id),
@@ -67,19 +67,19 @@ INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,tem
 INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (54,18,7,9,'01/06/2021','04/05/2021',37.1 );
 INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (55,31,4,24,'05/06/2021','12/05/2021',39.0 );
 INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (56,25,7,7,'09/06/2021','13/05/2021',39.8 );
-INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (57,17,18,33,'06/06/2021','05/05/2021',37.0 );
+INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (57,17,18,33,'06/06/2020','05/05/2020',37.0 );
 INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (58,8,7,9,'05/06/2021','11/05/2021',39.9 );
 INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (59,26,30,50,'10/06/2021','04/05/2021',37.2 );
 INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (60,4,17,16,'03/06/2021','11/05/2021',38.0 );
 INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (61,6,18,67,'28/05/2021','08/05/2021',38.0 );
-INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (62,25,16,75,'06/06/2021','05/05/2021',38.8 );
+INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (62,25,16,75,'06/06/2020','05/05/2020',38.8 );
 INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (63,6,25,53,'06/06/2021','15/05/2021',38.3 );
 INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (64,20,26,68,'30/05/2021','24/05/2021',39.4 );
 INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (65,2,13,69,'01/06/2021','14/05/2021',38.0 );
 INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (66,31,21,60,'09/06/2021','10/05/2021',39.7 );
-INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (67,24,16,31,'05/06/2021','10/05/2021',38.7 );
+INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (67,24,16,31,NULL,'10/05/2021',38.7 );
 INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (68,2,3,65,'09/06/2021','21/05/2021',38.9 );
-INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (69,12,2,4,'01/06/2021','02/05/2021',39.0 );
+INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (69,12,2,4,'01/06/2020','02/05/2020',39.0 );
 INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (70,7,23,64,'29/05/2021','24/05/2021',38.4 );
 INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (71,29,27,3,'09/06/2021','14/05/2021',39.2 );
 INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (72,25,19,76,'03/06/2021','04/05/2021',39.0 );
@@ -99,8 +99,8 @@ INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,tem
 INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (86,28,29,35,'05/06/2021','09/05/2021',37.1 );
 INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (87,6,29,64,'29/05/2021','20/05/2021',37.4 );
 INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (88,6,19,70,'11/06/2021','20/05/2021',37.7 );
-INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (89,23,26,8,'03/06/2021','20/05/2021',39.6 );
-INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (90,2,5,70,'09/06/2021','17/05/2021',39.0 );
+INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (89,23,26,8,NULL,'20/05/2021',39.6 );
+INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (90,2,5,70,NULL,'17/05/2021',39.0 );
 INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (91,6,18,6,'03/06/2021','15/05/2021',39.1 );
 INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (92,14,22,45,'06/06/2021','17/05/2021',38.0 );
 INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (93,16,20,48,'30/05/2021','13/05/2021',39.3 );
