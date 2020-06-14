@@ -21,7 +21,7 @@ INSERT INTO Doctors (id,name,phone,email,title) VALUES (10,'Otto Huffman','37544
 INSERT INTO Doctors (id,name,phone,email,title) VALUES (11,'Rogan Rosario','375338465927','mattis.Cras@montesnascetur.edu','педиатр');
 INSERT INTO Doctors (id,name,phone,email,title) VALUES (12,'Silas Ortiz','375442677398','pede.Praesent.eu@nisi.edu','акушер-гинеколог');
 INSERT INTO Doctors (id,name,phone,email,title) VALUES (13,'Allistair Solomon','375251054038','dignissim.tempor@per.ca','педиатр');
-INSERT INTO Doctors (id,name,phone,email,title) VALUES (14,'Wylie Marks','375296848759','nulla.vulputate.dui@purusaccumsan.com','кардиолог');
+INSERT INTO Doctors (id,name,phone,email,title) VALUES (14,'Wylie Marks','375291892097','nulla.vulputate.dui@purusaccumsan.com','кардиолог');
 INSERT INTO Doctors (id,name,phone,email,title) VALUES (15,'August Jefferson','375339507603','consectetuer.euismod.est@Integer.ca','диетолог');
 INSERT INTO Doctors (id,name,phone,email,title) VALUES (16,'Reed Wyatt','375296526894','sem.eget.massa@sitametrisus.net','инфекционист');
 INSERT INTO Doctors (id,name,phone,email,title) VALUES (17,'Sebastian Jarvis','375447623944','Nulla@euismodacfermentum.ca','акушер-гинеколог');

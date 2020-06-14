@@ -1,4 +1,4 @@
--- 1-10
+-- 1-11
 
 -- 3
 
@@ -69,20 +69,42 @@ Group BY EXTRACT(YEAR FROM TO_DATE(visit_date, 'DD/MM/YYYY'));
 
 -- 11
 
-SELECT temperature || ' | ' || Patients.name || ' | ' || visit_date, reason
-FROM Visits
-INNER JOIN Patients
+SELECT Hospital_Beds.id, Hospital_Beds.purchase_date, Hospital_Rooms.room_number
+FROM Hospital_Beds
+INNER JOIN Hospital_Rooms ON Hospital_Beds.room_id = Hospital_Rooms.id;
+
+SELECT Visits.id || ' - ' || Diagnoses.name FROM Visits
+LEFT JOIN Visit_Diagnoses
+  ON Visits.id = Visit_Diagnoses.visit_id
+LEFT JOIN Diagnoses
+  ON Visit_Diagnoses.diagnosis_id = Diagnoses.id
+WHERE Diagnoses.name IN ('Пневмонит', 'Грипп')
+
+SELECT Patients.name || ' phone: ' || Patients.phone || ' date:' || Visits.visit_date FROM Patients
+LEFT JOIN Visits
     ON Visits.patient_id = Patients.id
-WHERE EXTRACT(YEAR FROM TO_DATE(visit_date, 'DD/MM/YYYY HH24:MI:SS')) > 2018;
+WHERE phone = ANY (SELECT phone FROM Doctors);
+
+SELECT name FROM Doctors 
+WHERE EXISTS (
+   SELECT * FROM Visits
+   WHERE Visits.patient_id = 13 AND Visits.doctor_id = Doctors.id
+);
 
 -- 12
 
 -- enable print
 SET SERVEROUTPUT ON
 
-CREATE OR REPLACE PROCEDURE print_doctors (
-    doctor_id NUMBER 
-)
+
+-- Создать процедуру, выводящую список палат с указанием количества коек и статуса палаты:
+-- «пустая», если в палате никто не лежит;
+-- «свободных мест нет», если палата заполнена;
+-- «мужская», если в палате лежат только мужчины;
+-- «женская», если в палате лежат только женщины;
+-- «смешанная» во всех остальных случаях.
+
+CREATE OR REPLACE PROCEDURE print_room_status()
 IS
   el Doctors%ROWTYPE;
 BEGIN
