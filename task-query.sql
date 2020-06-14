@@ -117,4 +117,57 @@ EXCEPTION
       dbms_output.put_line( SQLERRM );
 END;
 /
-EXEC print_doctors (1);
+-- 13
+
+-- Написать функцию, возвращающую строку «больше месяца», если со
+-- времени поступления пациента прошло более одного месяца. В качестве
+-- параметра использовать диагноз и заменять для такого пациента его лечащего
+-- врача на того, у кого меньше всего больных.
+CREATE OR REPLACE FUNCTION UPDATE_DOCTORS_FOR_VISIT(DIAGNOSIS IN VARCHAR2) RETURN VARCHAR2
+IS
+    visit_id number;
+    doctor_id number;
+    cursor visit_cursor is
+        SELECT VISITS.ID
+        INTO visit_id
+        FROM Visits
+                 LEFT JOIN VISIT_DIAGNOSES VD on VISITS.ID = VD.VISIT_ID
+                 LEFT JOIN DIAGNOSES D on VD.DIAGNOSIS_ID = D.ID
+        WHERE TO_DATE(discharge_date, 'DD/MM/YYYY') - TO_DATE(visit_date, 'DD/MM/YYYY') > 30
+          AND D.NAME LIKE DIAGNOSIS FETCH FIRST 1 ROWS ONLY;
+BEGIN
+    open visit_cursor;
+    fetch visit_cursor into visit_id;
+
+    if visit_cursor%notfound then
+        close visit_cursor;
+        return 'all visit less than 30 days';
+    end if;
+
+    SELECT Doctors.id INTO doctor_id FROM Doctors
+      LEFT JOIN VISITS
+        ON VISITS.doctor_id = Doctors.id
+    Group BY Doctors.id
+    ORDER BY COUNT(VISITS.id) ASC
+    FETCH FIRST 1 ROWS ONLY;
+
+    if doctor_id IS NULL then
+        close visit_cursor;
+        return 'Doctor not found';
+    end if;
+
+    close visit_cursor;
+
+    UPDATE Visits SET doctor_id=doctor_id WHERE id=visit_id;
+    COMMIT;
+    RETURN 'More than 30 days. Visit ' || visit_id || ' updated with doctor id: ' || doctor_id;
+END;
+/
+
+declare
+    retvar varchar2(255);
+begin
+    retvar := UPDATE_DOCTORS_FOR_VISIT('Пневмонит');
+    dbms_output.Put_line(retvar);
+end;
+/
