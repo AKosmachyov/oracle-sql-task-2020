@@ -104,92 +104,58 @@ SET SERVEROUTPUT ON
 -- «женская», если в палате лежат только женщины;
 -- «смешанная» во всех остальных случаях.
 
-CREATE OR REPLACE PROCEDURE print_room_status( for_date IN DATE )
-IS
-  v_employeeRecord Visits%ROWTYPE;
+CREATE OR REPLACE PROCEDURE print_room_status(for_date IN DATE) IS
+    -- пустая, свободных мест нет, мужская, женская, смешанная
+    room_type    VARCHAR2(100) := '';
+    is_empty_bed BOOLEAN       := false;
 BEGIN
-
-  -- bed - bed type
-
-  SELECT * INTO v_employeeRecord FROM Visits
-  WHERE for_date >= TO_DATE(visit_date, 'DD/MM/YYYY') AND
-  (for_date <= TO_DATE(discharge_date, 'DD/MM/YYYY') OR discharge_date IS NULL);
-  
-
-  dbms_output.put_line( for_date);
-
+    FOR room IN (SELECT Hospital_Rooms.id, Hospital_Rooms.room_number, Bed_qty.quantity
+                 FROM Hospital_Rooms
+                          LEFT JOIN
+                      (SELECT COUNT(id) AS quantity, room_id FROM Hospital_Beds GROUP BY room_id) Bed_qty
+                      ON Hospital_Rooms.id = Bed_qty.room_id
+                 ORDER BY room_number ASC)
+        LOOP
+            is_empty_bed := false;
+            room_type := 'пустая';
+            FOR bed IN (SELECT visits.GENDER
+                        FROM HOSPITAL_BEDS
+                                 LEFT JOIN
+                             (SELECT visits.BED_ID, P.GENDER
+                              FROM VISITS
+                                       LEFT JOIN PATIENTS P on VISITS.PATIENT_ID = P.ID
+                              WHERE for_date >= TO_DATE(visit_date, 'DD/MM/YYYY')
+                                AND (for_date <= TO_DATE(discharge_date, 'DD/MM/YYYY') OR
+                                     discharge_date IS NULL)) visits
+                             ON id = visits.BED_ID
+                        WHERE ROOM_ID = room.id)
+                LOOP
+                    if bed.GENDER is NULL THEN
+                        is_empty_bed := true;
+                        CONTINUE;
+                    end if;
+                    if bed.GENDER = 'm' AND room_type = 'пустая' THEN
+                        room_type := 'мужская';
+                        CONTINUE;
+                    end if;
+                    if bed.GENDER = 'w' AND room_type = 'пустая' THEN
+                        room_type := 'мужская';
+                        CONTINUE;
+                    end if;
+                    room_type := 'смешанная';
+                end loop;
+            if is_empty_bed = false THEN
+                room_type := 'ободных мест нет';
+            end if;
+            dbms_output.put_line('#' || room.ROOM_NUMBER || ' - ' || room.quantity || 'qt. ' || room_type);
+        end loop;
 EXCEPTION
-   WHEN OTHERS THEN
-      dbms_output.put_line( SQLERRM );
-END;
-/
-EXEC print_room_status(TO_DATE('11/06/2021', 'DD/MM/YYYY'));
-
-CREATE OR REPLACE PROCEDURE print_room_status(for_date IN DATE)
-    IS
-
-    CURSOR asd IS SELECT
-    CURSOR names_cur IS
-        SELECT
-        FROM student.student_details
-        WHERE class_id = 'C';
-    names_t names_cur%ROWTYPE;
-    TYPE names_ntt IS TABLE OF names_t%TYPE; -- must use type
-    l_names names_ntt;
-BEGIN
-
-    -- room - bed count
-    SELECT Hospital_Rooms.room_number, Bed_qty.quantity
-    FROM Hospital_Rooms
-             LEFT JOIN
-         (SELECT COUNT(id) AS quantity, room_id FROM Hospital_Beds GROUP BY room_id) Bed_qty
-         ON Hospital_Rooms.id = Bed_qty.room_id
-    ORDER BY room_number ASC;
-
-    -- bed - gender
-    SELECT ROOM_ID, visits.GENDER
-    FROM HOSPITAL_BEDS
-             LEFT JOIN
-         (SELECT visits.BED_ID, P.GENDER
-          FROM VISITS
-                   LEFT JOIN PATIENTS P on VISITS.PATIENT_ID = P.ID
-          WHERE TO_DATE('11/06/2021', 'DD/MM/YYYY') >= TO_DATE(visit_date, 'DD/MM/YYYY')
-            AND (TO_DATE('11/06/2021', 'DD/MM/YYYY') <= TO_DATE(discharge_date, 'DD/MM/YYYY') OR
-                 discharge_date IS NULL)) visits
-         ON id = visits.BED_ID;
-
-
-    dbms_output.put_line(for_date);
-
-EXCEPTION
-    WHEN OTHERS THEN
+    WHEN
+        OTHERS THEN
         dbms_output.put_line(SQLERRM);
 END;
 /
-
-
-
-  FOR v_employeeRecord IN v_employeeRecords LOOP
-          /* Do something with v_employeeRecord */
-  END LOOP;
-
-  SELECT * INTO el FROM Doctors WHERE id = 1;
-
-  dbms_output.put_line( el.name || ' ' || el.email || ' ' ||' ' );/
--- 
-
-SELECT
-    name.firstName,
-    CASE
-       WHEN Mood.mood IS NOT NULL
-       THEN 'Unhappy'
-       ELSE 'Happy'
-    END Unhappy
-FROM name
-LEFT JOIN Mood ON
-    mood.firstName = name.firstName AND
-    mood.type IN ('Hungry','Tired','Fatigued','Bored') AND
-    mood.value > 5
+EXEC print_room_status(TO_DATE('11/06/2021', 'DD/MM/YYYY'));
 
 -- 13
 
@@ -334,6 +300,3 @@ begin
     dbms_output.Put_line(retvar);
 end;
 /
-
--- 17
-
