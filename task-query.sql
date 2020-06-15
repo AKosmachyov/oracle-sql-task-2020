@@ -8,7 +8,8 @@ INSERT INTO Doctors (id,name,phone,email,title) VALUES (200,'Malachi Carter','25
 
 -- 5
 SELECT name, email FROM Patients WHERE id=32;
-UPDATE Patients SET email='ivan_line@yandex.com' WHERE id=32;
+UPDATE Patients SET email='ivan_line23@yandex.com' WHERE id=32;
+SELECT name, email FROM Patients WHERE id=32;
 
 DELETE FROM Patients WHERE id=32;
 
@@ -51,7 +52,7 @@ Select * FROM (
   LEFT JOIN 
     (SELECT COUNT(Visits.id) AS quantity, Visits.doctor_id FROM Visits GROUP BY Visits.doctor_id) Visits_qty
   ON Doctors.id = Visits_qty.doctor_id
-UNION ALL
+  UNION ALL
   SELECT 'p. ' || Patients.name || ' - ' || Sick_days.days AS "Patients - sick days" FROM Patients
   LEFT JOIN (
     SELECT patient_id,
@@ -82,7 +83,7 @@ WHERE Diagnoses.name IN ('Пневмонит', 'Грипп')
 
 SELECT Patients.name || ' phone: ' || Patients.phone || ' date:' || Visits.visit_date FROM Patients
 LEFT JOIN Visits
-    ON Visits.patient_id = Patients.id
+  ON Visits.patient_id = Patients.id
 WHERE phone = ANY (SELECT phone FROM Doctors);
 
 SELECT name FROM Doctors 
@@ -96,7 +97,6 @@ WHERE EXISTS (
 -- enable print
 SET SERVEROUTPUT ON
 
-
 -- Создать процедуру, выводящую список палат с указанием количества коек и статуса палаты:
 -- «пустая», если в палате никто не лежит;
 -- «свободных мест нет», если палата заполнена;
@@ -104,19 +104,93 @@ SET SERVEROUTPUT ON
 -- «женская», если в палате лежат только женщины;
 -- «смешанная» во всех остальных случаях.
 
-CREATE OR REPLACE PROCEDURE print_room_status()
+CREATE OR REPLACE PROCEDURE print_room_status( for_date IN DATE )
 IS
-  el Doctors%ROWTYPE;
+  v_employeeRecord Visits%ROWTYPE;
 BEGIN
-  SELECT * INTO el FROM Doctors WHERE id = doctor_id;
 
-  dbms_output.put_line( el.name || ' ' || el.email || ' ' ||' ' );
+  -- bed - bed type
+
+  SELECT * INTO v_employeeRecord FROM Visits
+  WHERE for_date >= TO_DATE(visit_date, 'DD/MM/YYYY') AND
+  (for_date <= TO_DATE(discharge_date, 'DD/MM/YYYY') OR discharge_date IS NULL);
+  
+
+  dbms_output.put_line( for_date);
 
 EXCEPTION
    WHEN OTHERS THEN
       dbms_output.put_line( SQLERRM );
 END;
 /
+EXEC print_room_status(TO_DATE('11/06/2021', 'DD/MM/YYYY'));
+
+CREATE OR REPLACE PROCEDURE print_room_status(for_date IN DATE)
+    IS
+
+    CURSOR asd IS SELECT
+    CURSOR names_cur IS
+        SELECT
+        FROM student.student_details
+        WHERE class_id = 'C';
+    names_t names_cur%ROWTYPE;
+    TYPE names_ntt IS TABLE OF names_t%TYPE; -- must use type
+    l_names names_ntt;
+BEGIN
+
+    -- room - bed count
+    SELECT Hospital_Rooms.room_number, Bed_qty.quantity
+    FROM Hospital_Rooms
+             LEFT JOIN
+         (SELECT COUNT(id) AS quantity, room_id FROM Hospital_Beds GROUP BY room_id) Bed_qty
+         ON Hospital_Rooms.id = Bed_qty.room_id
+    ORDER BY room_number ASC;
+
+    -- bed - gender
+    SELECT ROOM_ID, visits.GENDER
+    FROM HOSPITAL_BEDS
+             LEFT JOIN
+         (SELECT visits.BED_ID, P.GENDER
+          FROM VISITS
+                   LEFT JOIN PATIENTS P on VISITS.PATIENT_ID = P.ID
+          WHERE TO_DATE('11/06/2021', 'DD/MM/YYYY') >= TO_DATE(visit_date, 'DD/MM/YYYY')
+            AND (TO_DATE('11/06/2021', 'DD/MM/YYYY') <= TO_DATE(discharge_date, 'DD/MM/YYYY') OR
+                 discharge_date IS NULL)) visits
+         ON id = visits.BED_ID;
+
+
+    dbms_output.put_line(for_date);
+
+EXCEPTION
+    WHEN OTHERS THEN
+        dbms_output.put_line(SQLERRM);
+END;
+/
+
+
+
+  FOR v_employeeRecord IN v_employeeRecords LOOP
+          /* Do something with v_employeeRecord */
+  END LOOP;
+
+  SELECT * INTO el FROM Doctors WHERE id = 1;
+
+  dbms_output.put_line( el.name || ' ' || el.email || ' ' ||' ' );/
+-- 
+
+SELECT
+    name.firstName,
+    CASE
+       WHEN Mood.mood IS NOT NULL
+       THEN 'Unhappy'
+       ELSE 'Happy'
+    END Unhappy
+FROM name
+LEFT JOIN Mood ON
+    mood.firstName = name.firstName AND
+    mood.type IN ('Hungry','Tired','Fatigued','Bored') AND
+    mood.value > 5
+
 -- 13
 
 -- Написать функцию, возвращающую строку «больше месяца», если со
@@ -171,3 +245,95 @@ begin
     dbms_output.Put_line(retvar);
 end;
 /
+
+-- 14
+
+CREATE OR REPLACE PROCEDURE print_room_status( text VARCHAR2 ) IS
+BEGIN
+
+  dbms_output.put_line('Procedure result: ' || text);
+
+EXCEPTION
+   WHEN OTHERS THEN
+      dbms_output.put_line( SQLERRM );
+END;
+/
+
+EXEC print_room_status('user text');
+
+-- 15
+
+CREATE OR REPLACE PACKAGE alex_pkg AS
+	
+	FUNCTION UPDATE_DOCTORS_FOR_VISIT(DIAGNOSIS IN VARCHAR2) RETURN VARCHAR2;
+
+	PROCEDURE print_room_status( text VARCHAR2 );
+
+  PROCEDURE print_room_status( for_date IN DATE );
+	
+END;
+/
+create or replace PACKAGE BODY alex_pkg AS
+
+    FUNCTION UPDATE_DOCTORS_FOR_VISIT(DIAGNOSIS IN VARCHAR2) RETURN VARCHAR2 IS
+        visit_id number;
+        doctor_id number;
+        cursor visit_cursor is
+            SELECT VISITS.ID
+            INTO visit_id
+            FROM Visits
+                LEFT JOIN VISIT_DIAGNOSES VD on VISITS.ID = VD.VISIT_ID
+                LEFT JOIN DIAGNOSES D on VD.DIAGNOSIS_ID = D.ID
+            WHERE TO_DATE(discharge_date, 'DD/MM/YYYY') - TO_DATE(visit_date, 'DD/MM/YYYY') > 30
+                AND D.NAME LIKE DIAGNOSIS FETCH FIRST 1 ROWS ONLY;
+    BEGIN
+        open visit_cursor;
+        fetch visit_cursor into visit_id;
+
+        if visit_cursor%notfound then
+            close visit_cursor;
+            return 'all visit less than 30 days';
+        end if;
+
+        SELECT Doctors.id INTO doctor_id FROM Doctors
+            LEFT JOIN VISITS ON VISITS.doctor_id = Doctors.id
+        Group BY Doctors.id
+        ORDER BY COUNT(VISITS.id) ASC
+        FETCH FIRST 1 ROWS ONLY;
+
+        if doctor_id IS NULL then
+            close visit_cursor;
+            return 'Doctor not found';
+        end if;
+
+        close visit_cursor;
+
+        UPDATE Visits SET doctor_id=doctor_id WHERE id=visit_id;
+        COMMIT;
+        RETURN 'More than 30 days. Visit ' || visit_id || ' updated with doctor id: ' || doctor_id;
+    END;
+
+    PROCEDURE print_room_status( text VARCHAR2 ) IS
+    BEGIN
+     dbms_output.put_line('Procedure result: ' || text);
+    END;
+
+    PROCEDURE print_room_status(for_date IN DATE) IS
+    BEGIN
+         dbms_output.put_line( for_date );
+    END;
+
+END alex_pkg;
+/
+
+
+declare
+    retvar varchar2(255);
+begin
+    retvar := alex_pkg.UPDATE_DOCTORS_FOR_VISIT('грипп');
+    dbms_output.Put_line(retvar);
+end;
+/
+
+-- 17
+
