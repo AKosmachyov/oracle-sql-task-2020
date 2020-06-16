@@ -5,7 +5,9 @@ CREATE TABLE Doctors (
   name VARCHAR2(255) NOT NULL,
   phone VARCHAR2(100),
   email VARCHAR2(255),
-  title VARCHAR2(255) NOT NULL
+  title VARCHAR2(255) NOT NULL,
+  category NUMBER NOT NULL,
+  create_date VARCHAR2(19) NOT NULL
 );
 
 INSERT INTO Doctors (id,name,phone,email,title) VALUES (1,'Mannix Golden','375337201403','Pellentesque.ultricies@mi.org','офтальмолог');
@@ -38,3 +40,36 @@ INSERT INTO Doctors (id,name,phone,email,title) VALUES (27,'Malachi Carter','375
 INSERT INTO Doctors (id,name,phone,email,title) VALUES (28,'Jarrod Bridges','375295240559','pede.nonummy@malesuadamalesuadaInteger.co.uk','педиатр');
 INSERT INTO Doctors (id,name,phone,email,title) VALUES (29,'Carl Rowland','375334637830','sagittis@Inornare.co.uk','акушер-гинеколог');
 INSERT INTO Doctors (id,name,phone,email,title) VALUES (30,'Keegan Wong','375292572492','facilisis.magna@ullamcorpermagnaSed.org','акушер-гинеколог');
+
+ALTER TABLE Doctors ADD (category NUMBER, create_date VARCHAR2(19));
+
+UPDATE Doctors SET title='инфекционист', category=4, create_date='26/09/2018' WHERE id=1;
+UPDATE Doctors SET title='инфекционист', category=1, create_date='28/01/2019' WHERE id=2;
+UPDATE Doctors SET title='инфекционист', category=4, create_date='07/10/2018' WHERE id=3;
+UPDATE Doctors SET title='инфекционист', category=4, create_date='05/12/2018' WHERE id=4;
+UPDATE Doctors SET title='терапевт', category=1, create_date='20/11/2018' WHERE id=5;
+UPDATE Doctors SET title='терапевт', category=2, create_date='22/06/2018' WHERE id=6;
+UPDATE Doctors SET title='терапевт', category=1, create_date='26/09/2018' WHERE id=7;
+UPDATE Doctors SET title='терапевт', category=1, create_date='08/07/2018' WHERE id=8;
+UPDATE Doctors SET title='кардиолог', category=4, create_date='24/06/2018' WHERE id=9;
+UPDATE Doctors SET title='кардиолог', category=2, create_date='21/11/2018' WHERE id=10;
+UPDATE Doctors SET title='кардиолог', category=4, create_date='14/09/2018' WHERE id=11;
+UPDATE Doctors SET title='кардиолог', category=1, create_date='18/10/2018' WHERE id=12;
+UPDATE Doctors SET title='онколог', category=1, create_date='23/09/2018' WHERE id=13;
+UPDATE Doctors SET title='онколог', category=2, create_date='19/06/2018' WHERE id=14;
+UPDATE Doctors SET title='онколог', category=2, create_date='23/09/2018' WHERE id=15;
+UPDATE Doctors SET title='онколог', category=2, create_date='16/12/2018' WHERE id=16;
+UPDATE Doctors SET title='инфекционист', category=0, create_date='17/06/2018' WHERE id=17;
+UPDATE Doctors SET title='инфекционист', category=1, create_date='01/12/2018' WHERE id=18;
+UPDATE Doctors SET title='инфекционист', category=2, create_date='23/10/2018' WHERE id=19;
+UPDATE Doctors SET title='инфекционист', category=4, create_date='23/09/2018' WHERE id=20;
+UPDATE Doctors SET title='терапевт', category=1, create_date='08/09/2018' WHERE id=21;
+UPDATE Doctors SET title='терапевт', category=4, create_date='21/07/2018' WHERE id=22;
+UPDATE Doctors SET title='терапевт', category=4, create_date='21/11/2018' WHERE id=23;
+UPDATE Doctors SET title='терапевт', category=3, create_date='23/11/2018' WHERE id=24;
+UPDATE Doctors SET title='кардиолог', category=1, create_date='29/01/2019' WHERE id=25;
+UPDATE Doctors SET title='кардиолог', category=3, create_date='29/08/2018' WHERE id=26;
+UPDATE Doctors SET title='кардиолог', category=0, create_date='28/07/2018' WHERE id=27;
+UPDATE Doctors SET title='кардиолог', category=1, create_date='04/07/2018' WHERE id=28;
+UPDATE Doctors SET title='онколог', category=2, create_date='08/07/2018' WHERE id=29;
+UPDATE Doctors SET title='онколог', category=2, create_date='10/11/2018' WHERE id=30;

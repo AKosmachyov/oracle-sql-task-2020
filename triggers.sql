@@ -95,10 +95,114 @@ END;
 
 CREATE TABLE a_table (col1 NUMBER);
 
--- Отслеживать количество пациентов, закрепленных за врачом
+-- 19
+
+-- 1) Отслеживать количество пациентов, закрепленных за врачом
 -- одновременно, не допускать превышения установленного значения, которое
 -- зависит от категории и стажа специалиста.
 -- 2) При госпитализации контролировать занятость койко-мест, тип палат
 -- (мужская, женская) и срок нахождения пациента в больнице (не более 14 дней).
 -- 3) Каждый день обновлять информацию о количестве пациентов в
 -- отделении и количестве свободных мест по палатам.
+
+CREATE OR REPLACE TRIGGER CHECK_DOCTOR
+    BEFORE INSERT OR UPDATE
+    ON VISITS
+    FOR EACH ROW
+DECLARE
+    DOCTOR_ID            Number := 0;
+    VISIT_COUNT          NUMBER := 0;
+    DOCTOR               DOCTORS%ROWTYPE;
+    WORK_EXPERIENCE_YEAR NUMBER := 0;
+    VALID_VISIT_COUNT    NUMBER := 0;
+BEGIN
+    DOCTOR_ID := :NEW.DOCTOR_ID;
+
+    SELECT COUNT(ID)
+    INTO VISIT_COUNT
+    FROM VISITS
+    WHERE VISITS.DOCTOR_ID = DOCTOR_ID
+      AND DISCHARGE_DATE IS NULL;
+
+    SELECT *
+    INTO DOCTOR
+    FROM DOCTORS
+    WHERE id = DOCTOR_ID;
+
+    IF INSERTING THEN
+        VISIT_COUNT := VISIT_COUNT + 1;
+    END IF;
+
+    SELECT EXTRACT(YEAR FROM SYSDATE) - EXTRACT(YEAR FROM TO_DATE(DOCTOR.CREATE_DATE, 'DD/MM/YYYY'))
+    INTO WORK_EXPERIENCE_YEAR
+    FROM dual;
+    VALID_VISIT_COUNT := WORK_EXPERIENCE_YEAR + DOCTOR.CATEGORY;
+    DBMS_OUTPUT.PUT_LINE('c ' || VALID_VISIT_COUNT || VISIT_COUNT);
+
+    IF VALID_VISIT_COUNT >= VISIT_COUNT THEN
+        DBMS_OUTPUT.PUT_LINE('This doctor can treat ' || VISIT_COUNT || '/' || VALID_VISIT_COUNT || ' patients');
+    ELSE
+        RAISE_APPLICATION_ERROR(-20000,
+                                'Cannot edit database ' ||
+                                ' Doctor treats the maximum number of patients');
+    end if;
+
+END;
+
+INSERT INTO Visits (id,patient_id,doctor_id,bed_id,discharge_date,visit_date,temperature) VALUES (98,23,24,20, NULL, '15/06/2021', 38.5 );
+
+CREATE OR REPLACE PROCEDURE print_status IS
+    patients_count NUMBER := 0;
+    busy_bed       NUMBER := 0;
+    total_bed      NUMBER := 0;
+BEGIN
+    SELECT COUNT(id) INTO patients_count FROM VISITS WHERE DISCHARGE_DATE is NULL;
+    DBMS_OUTPUT.PUT_LINE('Patients count: ' || patients_count);
+
+    FOR room IN (SELECT Hospital_Rooms.id, Hospital_Rooms.room_number FROM HOSPITAL_ROOMS ORDER BY room_number ASC)
+        LOOP
+            busy_bed := 0;
+            total_bed := 0;
+            FOR bed IN (SELECT VISIT_DATE, ID
+                        FROM HOSPITAL_BEDS
+                                 LEFT JOIN
+                             (SELECT visits.BED_ID, VISIT_DATE
+                              FROM VISITS
+                              WHERE DISCHARGE_DATE IS NULL)
+                             ON id = BED_ID
+                        WHERE ROOM_ID = room.id)
+                LOOP
+                    IF bed.VISIT_DATE IS NULL THEN
+                        busy_bed := busy_bed + 1;
+                    end if;
+                    total_bed := total_bed + 1;
+                END LOOP;
+
+            DBMS_OUTPUT.PUT_LINE('#' || room.ID || ' - ' ||
+                                 busy_bed || '/' || total_bed);
+        END LOOP;
+END;
+/
+
+BEGIN
+    DBMS_SCHEDULER.CREATE_PROGRAM(program_name => 'hospital_info_program',
+                                  PROGRAM_TYPE => 'STORED_PROCEDURE',
+                                  PROGRAM_ACTION => 'print_status');
+    DBMS_SCHEDULER.CREATE_SCHEDULE(schedule_name => 'hospital_info_schedule',
+                                   start_date => SYSTIMESTAMP,
+                                   repeat_interval => 'FREQ=DAILY;INTERVAL=1',
+                                   end_date => SYSTIMESTAMP + INTERVAL '1' MONTH);
+    DBMS_SCHEDULER.CREATE_JOB(job_name => 'hospital_info_job',
+                              program_name => 'hospital_info_program',
+                              schedule_name => 'hospital_info_schedule',
+                              enabled => TRUE);
+    DBMS_SCHEDULER.ENABLE('hospital_info_program');
+    DBMS_SCHEDULER.RUN_JOB(JOB_NAME => 'hospital_info_job', USE_CURRENT_SESSION => TRUE);
+END;
+/
+
+BEGIN
+  DBMS_SCHEDULER.DROP_JOB ('hospital_info_job');
+  DBMS_SCHEDULER.DROP_SCHEDULE ('hospital_info_schedule');
+  DBMS_SCHEDULER.DROP_PROGRAM ('hospital_info_program');
+END;
