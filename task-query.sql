@@ -163,19 +163,34 @@ EXEC print_room_status(TO_DATE('11/06/2021', 'DD/MM/YYYY'));
 -- времени поступления пациента прошло более одного месяца. В качестве
 -- параметра использовать диагноз и заменять для такого пациента его лечащего
 -- врача на того, у кого меньше всего больных.
-CREATE OR REPLACE FUNCTION UPDATE_DOCTORS_FOR_VISIT(DIAGNOSIS IN VARCHAR2) RETURN VARCHAR2
-IS
-    visit_id number;
-    doctor_id number;
+CREATE OR REPLACE FUNCTION UPDATE_DOCTORS_FOR_VISIT(DIAGNOSIS_NAME IN VARCHAR2) RETURN VARCHAR2
+    IS
+    visit_id     number;
+    doctor_id    number;
+    diagnosis_id number;
     cursor visit_cursor is
         SELECT VISITS.ID
         INTO visit_id
         FROM Visits
                  LEFT JOIN VISIT_DIAGNOSES VD on VISITS.ID = VD.VISIT_ID
-                 LEFT JOIN DIAGNOSES D on VD.DIAGNOSIS_ID = D.ID
         WHERE TO_DATE(discharge_date, 'DD/MM/YYYY') - TO_DATE(visit_date, 'DD/MM/YYYY') > 30
-          AND D.NAME LIKE DIAGNOSIS FETCH FIRST 1 ROWS ONLY;
+          AND diagnosis_id = diagnosis_id FETCH FIRST 1 ROWS ONLY;
+
+    cursor diagnosis_cursor is
+        SELECT ID
+        FROM DIAGNOSES
+        WHERE NAME LIKE DIAGNOSIS_NAME;
+
+    no_diagnosis_founded EXCEPTION;
 BEGIN
+    open diagnosis_cursor;
+    fetch diagnosis_cursor into diagnosis_id;
+    close diagnosis_cursor;
+
+    if diagnosis_id is null then
+        RAISE no_diagnosis_founded;
+    end if;
+
     open visit_cursor;
     fetch visit_cursor into visit_id;
 
@@ -185,11 +200,11 @@ BEGIN
     end if;
 
     SELECT Doctors.id INTO doctor_id FROM Doctors
-      LEFT JOIN VISITS
-        ON VISITS.doctor_id = Doctors.id
+             LEFT JOIN VISITS
+                       ON VISITS.doctor_id = Doctors.id
     Group BY Doctors.id
     ORDER BY COUNT(VISITS.id) ASC
-    FETCH FIRST 1 ROWS ONLY;
+        FETCH FIRST 1 ROWS ONLY;
 
     if doctor_id IS NULL then
         close visit_cursor;
@@ -198,9 +213,15 @@ BEGIN
 
     close visit_cursor;
 
-    UPDATE Visits SET doctor_id=doctor_id WHERE id=visit_id;
+    UPDATE Visits SET doctor_id=doctor_id WHERE id = visit_id;
     COMMIT;
     RETURN 'More than 30 days. Visit ' || visit_id || ' updated with doctor id: ' || doctor_id;
+
+EXCEPTION
+    WHEN no_diagnosis_founded THEN
+        return 'Диагноз с таким название не найден!';
+    WHEN OTHERS THEN
+        return SQLERRM;
 END;
 /
 
@@ -231,7 +252,7 @@ EXEC print_room_status('user text');
 
 CREATE OR REPLACE PACKAGE alex_pkg AS
 	
-	FUNCTION UPDATE_DOCTORS_FOR_VISIT(DIAGNOSIS IN VARCHAR2) RETURN VARCHAR2;
+	FUNCTION UPDATE_DOCTORS_FOR_VISIT(DIAGNOSIS_NAME IN VARCHAR2) RETURN VARCHAR2;
 
 	PROCEDURE print_room_status( text VARCHAR2 );
 
@@ -240,18 +261,34 @@ CREATE OR REPLACE PACKAGE alex_pkg AS
 END;
 /
 create or replace PACKAGE BODY alex_pkg AS
-    FUNCTION UPDATE_DOCTORS_FOR_VISIT(DIAGNOSIS IN VARCHAR2) RETURN VARCHAR2 IS
-        visit_id  number;
-        doctor_id number;
+    FUNCTION UPDATE_DOCTORS_FOR_VISIT(DIAGNOSIS_NAME IN VARCHAR2) RETURN VARCHAR2
+        IS
+        visit_id     number;
+        doctor_id    number;
+        diagnosis_id number;
         cursor visit_cursor is
             SELECT VISITS.ID
             INTO visit_id
             FROM Visits
-                     LEFT JOIN VISIT_DIAGNOSES VD on VISITS.ID = VD.VISIT_ID
-                     LEFT JOIN DIAGNOSES D on VD.DIAGNOSIS_ID = D.ID
+                    LEFT JOIN VISIT_DIAGNOSES VD on VISITS.ID = VD.VISIT_ID
             WHERE TO_DATE(discharge_date, 'DD/MM/YYYY') - TO_DATE(visit_date, 'DD/MM/YYYY') > 30
-              AND D.NAME LIKE DIAGNOSIS FETCH FIRST 1 ROWS ONLY;
+            AND diagnosis_id = diagnosis_id FETCH FIRST 1 ROWS ONLY;
+
+        cursor diagnosis_cursor is
+            SELECT ID
+            FROM DIAGNOSES
+            WHERE NAME LIKE DIAGNOSIS_NAME;
+
+        no_diagnosis_founded EXCEPTION;
     BEGIN
+        open diagnosis_cursor;
+        fetch diagnosis_cursor into diagnosis_id;
+        close diagnosis_cursor;
+
+        if diagnosis_id is null then
+            RAISE no_diagnosis_founded;
+        end if;
+
         open visit_cursor;
         fetch visit_cursor into visit_id;
 
@@ -261,7 +298,7 @@ create or replace PACKAGE BODY alex_pkg AS
         end if;
 
         SELECT Doctors.id INTO doctor_id FROM Doctors
-                 LEFT JOIN VISITS ON VISITS.doctor_id = Doctors.id
+                LEFT JOIN VISITS ON VISITS.doctor_id = Doctors.id
         Group BY Doctors.id
         ORDER BY COUNT(VISITS.id) ASC
             FETCH FIRST 1 ROWS ONLY;
@@ -276,6 +313,12 @@ create or replace PACKAGE BODY alex_pkg AS
         UPDATE Visits SET doctor_id=doctor_id WHERE id = visit_id;
         COMMIT;
         RETURN 'More than 30 days. Visit ' || visit_id || ' updated with doctor id: ' || doctor_id;
+
+    EXCEPTION
+        WHEN no_diagnosis_founded THEN
+            return 'Диагноз с таким название не найден!';
+        WHEN OTHERS THEN
+            return SQLERRM;
     END;
 
     PROCEDURE print_room_status(text VARCHAR2) IS
@@ -342,6 +385,11 @@ begin
     retvar := alex_pkg.UPDATE_DOCTORS_FOR_VISIT('грипп');
     dbms_output.Put_line(retvar);
     alex_pkg.print_room_status('Some user text');
+    dbms_output.Put_line('');
     alex_pkg.print_room_status(TO_DATE('05/06/2021', 'DD/MM/YYYY'));
+    dbms_output.Put_line('');
+    alex_pkg.print_room_status(TO_DATE('05/02/2021', 'DD/MM/YYYY'));
+    dbms_output.Put_line('');
+    dbms_output.Put_line(alex_pkg.UPDATE_DOCTORS_FOR_VISIT('qwe'));
 end;
 /
