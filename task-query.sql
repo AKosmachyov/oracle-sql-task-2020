@@ -145,7 +145,7 @@ BEGIN
                     room_type := 'смешанная';
                 end loop;
             if is_empty_bed = false THEN
-                room_type := 'ободных мест нет';
+                room_type := 'cвободных мест нет';
             end if;
             dbms_output.put_line('#' || room.ROOM_NUMBER || ' - ' || room.quantity || 'qt. ' || room_type);
         end loop;
@@ -235,23 +235,22 @@ CREATE OR REPLACE PACKAGE alex_pkg AS
 
 	PROCEDURE print_room_status( text VARCHAR2 );
 
-  PROCEDURE print_room_status( for_date IN DATE );
+    PROCEDURE print_room_status( for_date IN DATE );
 	
 END;
 /
 create or replace PACKAGE BODY alex_pkg AS
-
     FUNCTION UPDATE_DOCTORS_FOR_VISIT(DIAGNOSIS IN VARCHAR2) RETURN VARCHAR2 IS
-        visit_id number;
+        visit_id  number;
         doctor_id number;
         cursor visit_cursor is
             SELECT VISITS.ID
             INTO visit_id
             FROM Visits
-                LEFT JOIN VISIT_DIAGNOSES VD on VISITS.ID = VD.VISIT_ID
-                LEFT JOIN DIAGNOSES D on VD.DIAGNOSIS_ID = D.ID
+                     LEFT JOIN VISIT_DIAGNOSES VD on VISITS.ID = VD.VISIT_ID
+                     LEFT JOIN DIAGNOSES D on VD.DIAGNOSIS_ID = D.ID
             WHERE TO_DATE(discharge_date, 'DD/MM/YYYY') - TO_DATE(visit_date, 'DD/MM/YYYY') > 30
-                AND D.NAME LIKE DIAGNOSIS FETCH FIRST 1 ROWS ONLY;
+              AND D.NAME LIKE DIAGNOSIS FETCH FIRST 1 ROWS ONLY;
     BEGIN
         open visit_cursor;
         fetch visit_cursor into visit_id;
@@ -262,10 +261,10 @@ create or replace PACKAGE BODY alex_pkg AS
         end if;
 
         SELECT Doctors.id INTO doctor_id FROM Doctors
-            LEFT JOIN VISITS ON VISITS.doctor_id = Doctors.id
+                 LEFT JOIN VISITS ON VISITS.doctor_id = Doctors.id
         Group BY Doctors.id
         ORDER BY COUNT(VISITS.id) ASC
-        FETCH FIRST 1 ROWS ONLY;
+            FETCH FIRST 1 ROWS ONLY;
 
         if doctor_id IS NULL then
             close visit_cursor;
@@ -274,29 +273,75 @@ create or replace PACKAGE BODY alex_pkg AS
 
         close visit_cursor;
 
-        UPDATE Visits SET doctor_id=doctor_id WHERE id=visit_id;
+        UPDATE Visits SET doctor_id=doctor_id WHERE id = visit_id;
         COMMIT;
         RETURN 'More than 30 days. Visit ' || visit_id || ' updated with doctor id: ' || doctor_id;
     END;
 
-    PROCEDURE print_room_status( text VARCHAR2 ) IS
+    PROCEDURE print_room_status(text VARCHAR2) IS
     BEGIN
-     dbms_output.put_line('Procedure result: ' || text);
+        dbms_output.put_line('Procedure result: ' || text);
     END;
 
     PROCEDURE print_room_status(for_date IN DATE) IS
+        -- пустая, свободных мест нет, мужская, женская, смешанная
+        room_type    VARCHAR2(100) := '';
+        is_empty_bed BOOLEAN       := false;
     BEGIN
-         dbms_output.put_line( for_date );
+        FOR room IN (SELECT Hospital_Rooms.id, Hospital_Rooms.room_number, Bed_qty.quantity
+                     FROM Hospital_Rooms
+                              LEFT JOIN
+                          (SELECT COUNT(id) AS quantity, room_id FROM Hospital_Beds GROUP BY room_id) Bed_qty
+                          ON Hospital_Rooms.id = Bed_qty.room_id
+                     ORDER BY room_number ASC)
+            LOOP
+                is_empty_bed := false;
+                room_type := 'пустая';
+                FOR bed IN (SELECT visits.GENDER
+                            FROM HOSPITAL_BEDS
+                                     LEFT JOIN
+                                 (SELECT visits.BED_ID, P.GENDER
+                                  FROM VISITS
+                                           LEFT JOIN PATIENTS P on VISITS.PATIENT_ID = P.ID
+                                  WHERE for_date >= TO_DATE(visit_date, 'DD/MM/YYYY')
+                                    AND (for_date <= TO_DATE(discharge_date, 'DD/MM/YYYY') OR
+                                         discharge_date IS NULL)) visits
+                                 ON id = visits.BED_ID
+                            WHERE ROOM_ID = room.id)
+                    LOOP
+                        if bed.GENDER is NULL THEN
+                            is_empty_bed := true;
+                            CONTINUE;
+                        end if;
+                        if bed.GENDER = 'm' AND room_type = 'пустая' THEN
+                            room_type := 'мужская';
+                            CONTINUE;
+                        end if;
+                        if bed.GENDER = 'w' AND room_type = 'пустая' THEN
+                            room_type := 'мужская';
+                            CONTINUE;
+                        end if;
+                        room_type := 'смешанная';
+                    end loop;
+                if is_empty_bed = false THEN
+                    room_type := 'cвободных мест нет';
+                end if;
+                dbms_output.put_line('#' || room.ROOM_NUMBER || ' - ' || room.quantity || 'qt. ' || room_type);
+            end loop;
+        EXCEPTION
+        WHEN OTHERS THEN
+            dbms_output.put_line(SQLERRM);
     END;
 
 END alex_pkg;
 /
-
 
 declare
     retvar varchar2(255);
 begin
     retvar := alex_pkg.UPDATE_DOCTORS_FOR_VISIT('грипп');
     dbms_output.Put_line(retvar);
+    alex_pkg.print_room_status('Some user text');
+    alex_pkg.print_room_status(TO_DATE('05/06/2021', 'DD/MM/YYYY'));
 end;
 /
