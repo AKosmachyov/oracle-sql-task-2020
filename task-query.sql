@@ -1,4 +1,4 @@
--- 1-11
+-- 3-16 (task numbers)
 
 -- 3
 
@@ -379,10 +379,12 @@ create or replace PACKAGE BODY alex_pkg AS
 END alex_pkg;
 /
 
+--16 
+
 declare
     retvar varchar2(255);
 begin
-    retvar := alex_pkg.UPDATE_DOCTORS_FOR_VISIT('грипп');
+    retvar := alex_pkg.UPDATE_DOCTORS_FOR_VISIT('Грипп');
     dbms_output.Put_line(retvar);
     alex_pkg.print_room_status('Some user text');
     dbms_output.Put_line('');

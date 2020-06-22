@@ -17,6 +17,7 @@ $ sqlplus sys/GetStarted18c@//localhost:1521/XEPDB1 as sysdba
 $ CREATE USER alex IDENTIFIED BY admin;
 $ @.\user_permissions.sql
 
+# Set flag for translated version of Oracle
 $ set NLS_LANG=.AL32UTF8
 # SQL Plus login 
 $ sqlplus alex/admin@//localhost:1521/XEPDB1
