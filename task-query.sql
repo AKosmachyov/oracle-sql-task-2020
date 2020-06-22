@@ -75,11 +75,11 @@ FROM Hospital_Beds
 INNER JOIN Hospital_Rooms ON Hospital_Beds.room_id = Hospital_Rooms.id;
 
 SELECT Visits.id || ' - ' || Diagnoses.name FROM Visits
-LEFT JOIN Visit_Diagnoses
+RIGHT JOIN Visit_Diagnoses
   ON Visits.id = Visit_Diagnoses.visit_id
 LEFT JOIN Diagnoses
   ON Visit_Diagnoses.diagnosis_id = Diagnoses.id
-WHERE Diagnoses.name IN ('Пневмонит', 'Грипп')
+WHERE Diagnoses.name IN ('Пневмонит', 'Грипп');
 
 SELECT Patients.name || ' phone: ' || Patients.phone || ' date:' || Visits.visit_date FROM Patients
 RIGHT JOIN Visits
