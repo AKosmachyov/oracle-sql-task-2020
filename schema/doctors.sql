@@ -63,7 +63,7 @@ UPDATE Doctors SET title='инфекционист', category=0, create_date='17
 UPDATE Doctors SET title='инфекционист', category=1, create_date='01/12/2018' WHERE id=18;
 UPDATE Doctors SET title='инфекционист', category=2, create_date='23/10/2018' WHERE id=19;
 UPDATE Doctors SET title='инфекционист', category=4, create_date='23/09/2018' WHERE id=20;
-UPDATE Doctors SET title='терапевт', category=1, create_date='08/09/2018' WHERE id=21;
+UPDATE Doctors SET title='терапевт', category=1, create_date='08/09/2016' WHERE id=21;
 UPDATE Doctors SET title='терапевт', category=4, create_date='21/07/2018' WHERE id=22;
 UPDATE Doctors SET title='терапевт', category=4, create_date='21/11/2018' WHERE id=23;
 UPDATE Doctors SET title='терапевт', category=3, create_date='23/11/2018' WHERE id=24;

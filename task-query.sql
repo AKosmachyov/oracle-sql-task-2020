@@ -82,9 +82,10 @@ LEFT JOIN Diagnoses
 WHERE Diagnoses.name IN ('Пневмонит', 'Грипп')
 
 SELECT Patients.name || ' phone: ' || Patients.phone || ' date:' || Visits.visit_date FROM Patients
-LEFT JOIN Visits
+RIGHT JOIN Visits
   ON Visits.patient_id = Patients.id
-WHERE phone = ANY (SELECT phone FROM Doctors);
+WHERE EXTRACT(YEAR FROM TO_DATE(BIRTH_DATE, 'DD/MM/YYYY')) > ANY 
+(SELECT EXTRACT(YEAR FROM TO_DATE(CREATE_DATE, 'DD/MM/YYYY')) FROM DOCTORS);
 
 SELECT name FROM Doctors 
 WHERE EXISTS (
